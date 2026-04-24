@@ -1,36 +1,27 @@
 """
-Bu dosya projenin çalıştırıcı dosyasıdır.
+Bu dosya finalde seçilen stratejiyi çalıştırmak için kullanılacak.
 
-Asıl strateji mantığı burada değil, strategy_cnlib.py içindedir.
-Burada sadece:
-- stratejiyi oluşturuyoruz
-- cnlib backtest motorunu çalıştırıyoruz
-- sonucu ekrana yazdırıyoruz
+Şimdilik varsayılan olarak Safe stratejiyi çalıştırıyoruz.
+Sonra compare_strategies.py sonucuna göre bunu Fast veya ML ile değiştirebiliriz.
 """
 
 from cnlib import backtest
 
 from config import INITIAL_CAPITAL
-from strategy_cnlib import BenettonStrategy
+from strategy_safe import SafeHybridStrategy
 
 
 def main():
-    # Strateji nesnesini oluştur
-    strategy = BenettonStrategy()
-
-    # cnlib backtest motorunu çalıştır
+    strategy = SafeHybridStrategy()
     result = backtest.run(
         strategy=strategy,
         initial_capital=INITIAL_CAPITAL,
     )
 
-    # Özet sonuçları yazdır
     result.print_summary()
 
-    # Ek bilgi de basalım
     print("\nToplam getiri yüzdesi:", result.return_pct)
-    print("\nİlk birkaç trade kaydı:")
-    print(result.trade_history[:5])
+    print("\nTrade sayısı:", len(result.trade_history))
 
 
 if __name__ == "__main__":

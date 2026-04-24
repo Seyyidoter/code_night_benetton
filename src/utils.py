@@ -1,9 +1,6 @@
 """
-Bu dosya stratejide tekrar kullanılan küçük yardımcı fonksiyonları tutar.
-
-Neden ayrı dosyada?
-- strategy_cnlib.py gereksiz büyümesin
-- küçük hesaplar ve ortak kontroller tek yerde dursun
+Bu dosya tekrar eden küçük yardımcı fonksiyonları tutar.
+Strateji dosyasını gereksiz uzatmamak için burada saklıyoruz.
 """
 
 from typing import Iterable
@@ -11,19 +8,18 @@ from typing import Iterable
 
 def has_nan(values: Iterable) -> bool:
     """
-    İçinde NaN / None benzeri bozuk değer var mı kontrol eder.
-    Basit güvenlik katmanı.
+    İçeride NaN veya bozuk değer var mı kontrol eder.
+    Rolling indikatörlerin ilk satırlarında bu çok işe yarar.
     """
     for value in values:
-        # NaN için pratik kontrol: NaN != NaN
-        if value is None or value != value:
+        if value is None or value != value:  # NaN != NaN olduğu için pratik kontrol
             return True
     return False
 
 
 def choose_ma_columns(use_ema: bool, short_ma: int, long_ma: int) -> tuple[str, str]:
     """
-    Kullanılan trend filtresine göre hangi kolonların okunacağını döner.
+    Trend filtresinde hangi kolonların kullanılacağını döndürür.
     """
     if use_ema:
         return f"EMA_{short_ma}", f"EMA_{long_ma}"
@@ -32,7 +28,7 @@ def choose_ma_columns(use_ema: bool, short_ma: int, long_ma: int) -> tuple[str, 
 
 def build_tp_sl(entry: float, direction: int, stop_loss_pct: float, take_profit_pct: float) -> tuple[float, float]:
     """
-    Giriş fiyatına göre TP ve SL seviyelerini üretir.
+    Giriş fiyatına göre TP ve SL seviyelerini hesaplar.
 
     direction:
     1  -> long
