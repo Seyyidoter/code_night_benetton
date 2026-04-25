@@ -1,0 +1,22 @@
+Testing Golden Cross on Unseen Test Set...
+Backtest starting: 365 candles, start_candle=0
+  Candle    0/365  Portfolio: $3,000.00
+  Candle  100/365  Portfolio: $2,913.40
+  Candle  200/365  Portfolio: $3,448.68
+  Candle  300/365  Portfolio: $4,076.71
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    4,614.53
+  Net P&L             : $   +1,614.53
+  Return              :     +53.8178%
+-------------------------------------------------------
+  Total Candles       :           365
+  Total Trades        :            46
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :            84
+=======================================================

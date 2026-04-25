@@ -1,0 +1,57 @@
+Backtest starting: 1570 candles, start_candle=0
+  Candle    0/1570  Portfolio: $3,000.00
+DEBUG: coin=kapcoin-usd_train proba=0.7401 safe_L=True safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.7510 safe_L=True safe_S=False
+DEBUG: coin=tamcoin-usd_train proba=0.7279 safe_L=True safe_S=False
+DEBUG: coin=kapcoin-usd_train proba=0.8173 safe_L=True safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.7465 safe_L=True safe_S=False
+DEBUG: coin=tamcoin-usd_train proba=0.7497 safe_L=True safe_S=False
+DEBUG: coin=kapcoin-usd_train proba=0.7067 safe_L=True safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.7473 safe_L=True safe_S=False
+DEBUG: coin=tamcoin-usd_train proba=0.7204 safe_L=True safe_S=False
+DEBUG: coin=kapcoin-usd_train proba=0.2995 safe_L=False safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.3956 safe_L=False safe_S=False
+DEBUG: coin=tamcoin-usd_train proba=0.5325 safe_L=False safe_S=False
+DEBUG: coin=kapcoin-usd_train proba=0.3846 safe_L=False safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.5801 safe_L=True safe_S=False
+DEBUG: coin=tamcoin-usd_train proba=0.4966 safe_L=True safe_S=False
+DEBUG: coin=kapcoin-usd_train proba=0.4030 safe_L=False safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.5117 safe_L=False safe_S=False
+DEBUG: coin=tamcoin-usd_train proba=0.4223 safe_L=False safe_S=False
+DEBUG: coin=kapcoin-usd_train proba=0.7277 safe_L=True safe_S=False
+DEBUG: coin=metucoin-usd_train proba=0.7906 safe_L=True safe_S=False
+  Candle  100/1570  Portfolio: $9,140.25
+  Candle  200/1570  Portfolio: $58,605.50
+  Candle  300/1570  Portfolio: $236,965.99
+  Candle  400/1570  Portfolio: $966,225.58
+  Candle  500/1570  Portfolio: $3,790,874.22
+  Candle  600/1570  Portfolio: $20,102,979.43
+  Candle  700/1570  Portfolio: $43,498,922.41
+  Candle  800/1570  Portfolio: $101,552,571.45
+  Candle  900/1570  Portfolio: $267,169,992.84
+  Candle 1000/1570  Portfolio: $539,017,513.83
+  Candle 1100/1570  Portfolio: $2,002,682,836.40
+  Candle 1200/1570  Portfolio: $7,354,077,666.46
+  Candle 1300/1570  Portfolio: $16,146,928,859.11
+  Candle 1400/1570  Portfolio: $37,632,222,344.76
+  Candle 1500/1570  Portfolio: $173,402,304,319.13
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $394,295,226,299.04
+  Net P&L             : $+394,295,223,299.04
+  Return              :  +13143174109.9680%
+-------------------------------------------------------
+  Total Candles       :         1,570
+  Total Trades        :         1,535
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :           106
+=======================================================
+
+Toplam getiri yüzdesi: 13143174109.968
+
+Trade sayısı: 900

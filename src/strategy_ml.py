@@ -12,7 +12,7 @@ Bu cnlib kılavuzundaki öneriyle uyumludur.
 
 import numpy as np
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.ensemble import HistGradientBoostingClassifier
 from cnlib.base_strategy import BaseStrategy
 
 from config import (
@@ -41,44 +41,37 @@ class MLConfirmedStrategy(BaseStrategy):
         }
 
     def _feature_frame(self, df: pd.DataFrame) -> pd.DataFrame:
-        """
-        ML için kullanılacak özellikleri çıkarır.
-        """
-        df = add_indicators(df).copy()
-
         features = pd.DataFrame(index=df.index)
-        features["ret_1"] = df["RETURNS"]
-        features["ma_diff_safe"] = df["MA_DIFF_SAFE"]
-        features["ma_diff_fast"] = df["MA_DIFF_FAST"]
-        features["obv_diff"] = df["OBV_DIFF"]
-        features["bb_position"] = df["BB_POSITION"]
+        features["ma_diff"] = df["MA_DIFF_SAFE"] # Golden cross sinyali ana data
         features["volatility"] = df["VOLATILITY"]
-        features["volume_confirmed"] = df["VOLUME_CONFIRMED"].astype(float)
-        features["volume_spike"] = df["VOLUME_SPIKE"].astype(float)
-
+        features["rsi"] = df["RSI"]
+        features["macd_hist"] = df["MACD_HIST"]
+        features["atr"] = df["ATR"]
+        features["adx"] = df["ADX"]
+        
         return features
 
     def _build_labels(self, df: pd.DataFrame) -> pd.Series:
         """
-        Bir sonraki kapanış mevcut kapanıştan yüksekse 1, değilse 0.
+        Makro Hedef: Gelecek 7 Mum sonrasındaki fiyat, şu ana kıyasla en az %1 yukarıda mı?
+        Sadece büyük hedefleri ezberletmek için ufak gürültüleri sıfırlıyoruz.
         """
-        return (df["Close"].shift(-1) > df["Close"]).astype(int)
+        return (df["Close"].shift(-7) > (df["Close"] * 1.01)).astype(int)
 
-    def prepare_models(self):
+    def egit(self):
         """
         get_data() sonrası çağrılır.
         coin_data içindeki verilerle her coin için model eğitir.
         """
         self.models = {}
 
-        for coin, df in self.coin_data.items():
+        for coin, df in self._full_data.items():
             enriched = add_indicators(df)
             X = self._feature_frame(enriched)
             y = self._build_labels(enriched)
 
             dataset = X.copy()
             dataset["target"] = y
-
             dataset = dataset.dropna().reset_index(drop=True)
 
             if len(dataset) < MIN_HISTORY:
@@ -87,45 +80,41 @@ class MLConfirmedStrategy(BaseStrategy):
             X_clean = dataset.drop(columns=["target"])
             y_clean = dataset["target"]
 
-            model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=5,
+            model = HistGradientBoostingClassifier(
+                max_iter=150,
+                max_depth=5,                # Dört yıllık veriyi analiz edebilmesi için zeka derinliği 5'e çıkarıldı
+                learning_rate=0.03,         # Sindirerek öğrenme
+                l2_regularization=0.5,      # Yumuşak ceza
+                min_samples_leaf=20,
                 random_state=42,
+                class_weight="balanced"
             )
-            model.fit(X_clean.iloc[:-1], y_clean.iloc[:-1])
+            model.fit(X_clean.iloc[:-10], y_clean.iloc[:-10])
 
             self.models[coin] = model
 
-    def _build_long_decision(self, coin: str, entry: float) -> dict:
-        take_profit, stop_loss = build_tp_sl(
-            entry=entry,
-            direction=1,
-            stop_loss_pct=ML_STOP_LOSS_PCT,
-            take_profit_pct=ML_TAKE_PROFIT_PCT,
-        )
+    def _build_long_decision(self, coin: str, entry: float, atr_val: float, allocation: float = ML_ALLOCATION, leverage: int = DEFAULT_LEVERAGE) -> dict:
+        sl_price = max(entry - (2.0 * atr_val), entry * 0.5)
+        tp_price = entry + (4.0 * atr_val)
         return {
             "coin": coin,
             "signal": 1,
-            "allocation": ML_ALLOCATION,
-            "leverage": DEFAULT_LEVERAGE,
-            "take_profit": take_profit,
-            "stop_loss": stop_loss,
+            "allocation": allocation,
+            "leverage": leverage,
+            "take_profit": tp_price,
+            "stop_loss": sl_price,
         }
 
-    def _build_short_decision(self, coin: str, entry: float) -> dict:
-        take_profit, stop_loss = build_tp_sl(
-            entry=entry,
-            direction=-1,
-            stop_loss_pct=ML_STOP_LOSS_PCT,
-            take_profit_pct=ML_TAKE_PROFIT_PCT,
-        )
+    def _build_short_decision(self, coin: str, entry: float, atr_val: float, allocation: float = ML_ALLOCATION, leverage: int = DEFAULT_LEVERAGE) -> dict:
+        sl_price = entry + (2.0 * atr_val)
+        tp_price = max(entry - (4.0 * atr_val), entry * 0.1)
         return {
             "coin": coin,
             "signal": -1,
-            "allocation": ML_ALLOCATION,
-            "leverage": DEFAULT_LEVERAGE,
-            "take_profit": take_profit,
-            "stop_loss": stop_loss,
+            "allocation": allocation,
+            "leverage": leverage,
+            "take_profit": tp_price,
+            "stop_loss": sl_price,
         }
 
     def predict(self, data: dict) -> list[dict]:
@@ -137,13 +126,7 @@ class MLConfirmedStrategy(BaseStrategy):
                 continue
 
             enriched = add_indicators(df)
-            X = self._feature_frame(enriched).dropna()
-
-            if len(X) == 0:
-                decisions.append(self._flat_decision(coin))
-                continue
-
-            last_features = X.iloc[-1]
+            last_features = self._feature_frame(enriched).iloc[-1]
 
             if has_nan(last_features.values):
                 decisions.append(self._flat_decision(coin))
@@ -152,10 +135,31 @@ class MLConfirmedStrategy(BaseStrategy):
             proba_up = self.models[coin].predict_proba([last_features.values])[0][1]
             entry = float(enriched["Close"].iloc[-1])
 
-            if proba_up >= ML_PROBA_THRESHOLD:
-                decisions.append(self._build_long_decision(coin, entry))
-            elif proba_up <= (1 - ML_PROBA_THRESHOLD):
-                decisions.append(self._build_short_decision(coin, entry))
+            # Makro Trend Analizi için rahatlatılmış kısıtlamalar
+            ma_diff_safe = float(enriched["MA_DIFF_SAFE"].iloc[-1])
+            adx_val = float(enriched["ADX"].iloc[-1]) if "ADX" in enriched.columns else 25.0
+            atr_val = float(enriched["ATR"].iloc[-1])
+
+            is_safe_long = ma_diff_safe > 0
+            is_safe_short = ma_diff_safe < 0
+            is_trending = adx_val >= 20.0  # Erken yakalamak için 20'ye gevşetildi
+
+            if not hasattr(self, "debug_print_cnt"):
+                self.debug_print_cnt = 0
+            if self.debug_print_cnt < 20:
+                print(f"DEBUG: coin={coin} proba={proba_up:.4f} safe_L={is_safe_long} trend={is_trending} atr={atr_val:.2f}")
+                self.debug_print_cnt += 1
+
+            # YZ'ye Güçlü Yetki Devri (Zeki Bakiye)
+            if proba_up >= 0.55 and is_safe_long and is_trending:
+                allocation = 0.33 if proba_up > 0.80 else 0.25 # Trende güçlü giriş
+                leverage = 3 if proba_up > 0.80 else 2
+                decisions.append(self._build_long_decision(coin, entry, atr_val, allocation, leverage))
+            elif proba_up <= 0.45 and is_safe_short and is_trending:
+                p_down = 1 - proba_up
+                allocation = 0.33 if p_down > 0.80 else 0.25
+                leverage = 3 if p_down > 0.80 else 2
+                decisions.append(self._build_short_decision(coin, entry, atr_val, allocation, leverage))
             else:
                 decisions.append(self._flat_decision(coin))
 

@@ -10,6 +10,7 @@ Kullandıklarımız:
 """
 
 import pandas as pd
+import numpy as np
 
 from config import (
     SHORT_MA,
@@ -85,10 +86,53 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["VOLATILITY"] = df["RETURNS"].rolling(VOLATILITY_WINDOW).std()
     df["VOLATILITY_AVG"] = df["VOLATILITY"].rolling(VOLATILITY_WINDOW).mean()
 
+    # RSI (14)
+    delta = df["Close"].diff()
+    gain = delta.where(delta > 0, 0).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss
+    df["RSI"] = 100 - (100 / (1 + rs))
+
+    # MACD (12, 26, 9)
+    ema12 = df["Close"].ewm(span=12, adjust=False).mean()
+    ema26 = df["Close"].ewm(span=26, adjust=False).mean()
+    df["MACD"] = ema12 - ema26
+    df["MACD_SIGNAL"] = df["MACD"].ewm(span=9, adjust=False).mean()
+    df["MACD_HIST"] = df["MACD"] - df["MACD_SIGNAL"]
+
+    # ATR (14)
+    high_low = df["High"] - df["Low"]
+    high_close = (df["High"] - df["Close"].shift()).abs()
+    low_close = (df["Low"] - df["Close"].shift()).abs()
+    tr = pd.concat([high_low, high_close, low_close], axis=1).max(axis=1)
+    df["ATR"] = tr.rolling(window=14).mean()
+
+    # ADX Market Regime Detector (14)
+    up_move = df["High"] - df["High"].shift()
+    down_move = df["Low"].shift() - df["Low"]
+    
+    pos_dm = pd.Series(np.where((up_move > down_move) & (up_move > 0), up_move, 0.0), index=df.index)
+    neg_dm = pd.Series(np.where((down_move > up_move) & (down_move > 0), down_move, 0.0), index=df.index)
+
+    pos_di = 100 * (pos_dm.rolling(window=14).mean() / df["ATR"])
+    neg_di = 100 * (neg_dm.rolling(window=14).mean() / df["ATR"])
+    
+    dx = 100 * (abs(pos_di - neg_di) / (pos_di + neg_di))
+    df["ADX"] = dx.rolling(window=14).mean()
+
     # ML için yardımcı özellikler
     df["MA_DIFF_SAFE"] = df[f"SMA_{SHORT_MA}"] - df[f"SMA_{LONG_MA}"]
     df["MA_DIFF_FAST"] = df[f"EMA_{FAST_EMA_SHORT}"] - df[f"EMA_{FAST_EMA_LONG}"]
     df["OBV_DIFF"] = df["OBV"].diff()
     df["BB_POSITION"] = (df["Close"] - df["BB_LOWER"]) / (df["BB_UPPER"] - df["BB_LOWER"])
+
+    # Zaman özellikleri
+    if "Date" in df.columns:
+        dt_col = pd.to_datetime(df["Date"])
+        df["hour"] = dt_col.dt.hour
+        df["day_of_week"] = dt_col.dt.dayofweek
+    else:
+        df["hour"] = 0
+        df["day_of_week"] = 0
 
     return df

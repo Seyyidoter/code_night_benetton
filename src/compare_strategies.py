@@ -25,7 +25,8 @@ def compute_max_drawdown(portfolio_series) -> float:
     """
     Portföy serisinden maksimum drawdown yüzdesini hesaplar.
     """
-    series = pd.Series(portfolio_series, dtype="float64")
+    values = [x["portfolio_value"] for x in portfolio_series]
+    series = pd.Series(values, dtype="float64")
     if len(series) == 0:
         return 0.0
 

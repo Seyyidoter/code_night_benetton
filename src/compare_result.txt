@@ -1,0 +1,121 @@
+
+============================================================
+RUNNING STRATEGY: SAFE
+============================================================
+Backtest starting: 1570 candles, start_candle=0
+  Candle    0/1570  Portfolio: $3,000.00
+  Candle  100/1570  Portfolio: $3,063.10
+  Candle  200/1570  Portfolio: $3,173.40
+  Candle  300/1570  Portfolio: $3,315.68
+  Candle  400/1570  Portfolio: $3,383.96
+  Candle  500/1570  Portfolio: $3,472.70
+  Candle  600/1570  Portfolio: $3,577.98
+  Candle  700/1570  Portfolio: $3,632.88
+  Candle  800/1570  Portfolio: $3,689.23
+  Candle  900/1570  Portfolio: $3,759.08
+  Candle 1000/1570  Portfolio: $3,817.97
+  Candle 1100/1570  Portfolio: $3,890.04
+  Candle 1200/1570  Portfolio: $4,021.40
+  Candle 1300/1570  Portfolio: $4,032.17
+  Candle 1400/1570  Portfolio: $4,121.64
+  Candle 1500/1570  Portfolio: $4,274.82
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    4,339.01
+  Net P&L             : $   +1,339.01
+  Return              :     +44.6338%
+-------------------------------------------------------
+  Total Candles       :         1,570
+  Total Trades        :           806
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+
+============================================================
+RUNNING STRATEGY: FAST
+============================================================
+Backtest starting: 1570 candles, start_candle=0
+  Candle    0/1570  Portfolio: $3,000.00
+  Candle  100/1570  Portfolio: $3,000.00
+  Candle  200/1570  Portfolio: $3,000.00
+  Candle  300/1570  Portfolio: $3,000.00
+  Candle  400/1570  Portfolio: $3,000.00
+  Candle  500/1570  Portfolio: $3,000.00
+  Candle  600/1570  Portfolio: $3,000.00
+  Candle  700/1570  Portfolio: $2,999.25
+  Candle  800/1570  Portfolio: $2,999.27
+  Candle  900/1570  Portfolio: $3,017.26
+  Candle 1000/1570  Portfolio: $3,017.26
+  Candle 1100/1570  Portfolio: $3,017.99
+  Candle 1200/1570  Portfolio: $3,062.57
+  Candle 1300/1570  Portfolio: $3,065.85
+  Candle 1400/1570  Portfolio: $3,065.85
+  Candle 1500/1570  Portfolio: $3,083.76
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    3,078.00
+  Net P&L             : $      +78.00
+  Return              :      +2.5999%
+-------------------------------------------------------
+  Total Candles       :         1,570
+  Total Trades        :            46
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+
+============================================================
+RUNNING STRATEGY: ML
+============================================================
+Backtest starting: 1570 candles, start_candle=0
+  Candle    0/1570  Portfolio: $3,000.00
+  Candle  100/1570  Portfolio: $3,000.00
+  Candle  200/1570  Portfolio: $3,000.00
+  Candle  300/1570  Portfolio: $3,000.00
+  Candle  400/1570  Portfolio: $3,000.00
+  Candle  500/1570  Portfolio: $3,000.00
+  Candle  600/1570  Portfolio: $3,000.00
+  Candle  700/1570  Portfolio: $3,000.00
+  Candle  800/1570  Portfolio: $3,000.00
+  Candle  900/1570  Portfolio: $3,000.00
+  Candle 1000/1570  Portfolio: $3,000.00
+  Candle 1100/1570  Portfolio: $3,000.00
+  Candle 1200/1570  Portfolio: $3,000.00
+  Candle 1300/1570  Portfolio: $3,000.00
+  Candle 1400/1570  Portfolio: $3,000.00
+  Candle 1500/1570  Portfolio: $3,000.00
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    3,000.00
+  Net P&L             : $       +0.00
+  Return              :      +0.0000%
+-------------------------------------------------------
+  Total Candles       :         1,570
+  Total Trades        :             0
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+
+============================================================
+COMPARISON TABLE
+============================================================
+strategy  return_pct  trade_count  max_drawdown_pct  balanced_score
+    safe     44.6338          525              0.58           44.05
+    fast      2.5999           36              0.29            2.31
+      ml      0.0000            0              0.00            0.00
+
+Best balanced candidate: safe

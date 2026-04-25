@@ -1,0 +1,37 @@
+Backtest starting: 1570 candles, start_candle=0
+  Candle    0/1570  Portfolio: $3,000.00
+  Candle  100/1570  Portfolio: $3,000.00
+  Candle  200/1570  Portfolio: $3,000.00
+  Candle  300/1570  Portfolio: $3,000.00
+  Candle  400/1570  Portfolio: $3,000.00
+  Candle  500/1570  Portfolio: $3,000.00
+  Candle  600/1570  Portfolio: $3,000.00
+  Candle  700/1570  Portfolio: $3,000.00
+  Candle  800/1570  Portfolio: $3,000.00
+  Candle  900/1570  Portfolio: $3,000.00
+  Candle 1000/1570  Portfolio: $3,000.00
+  Candle 1100/1570  Portfolio: $3,000.00
+  Candle 1200/1570  Portfolio: $3,000.00
+  Candle 1300/1570  Portfolio: $3,000.00
+  Candle 1400/1570  Portfolio: $3,000.00
+  Candle 1500/1570  Portfolio: $3,000.00
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    3,000.00
+  Net P&L             : $       +0.00
+  Return              :      +0.0000%
+-------------------------------------------------------
+  Total Candles       :         1,570
+  Total Trades        :             0
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+
+Toplam getiri yüzdesi: 0.0
+
+Trade sayısı: 0

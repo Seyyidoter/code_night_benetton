@@ -1,0 +1,44 @@
+Initializing Advanced Quant Strategy on Unseen Test Set...
+Training model on 4-year historical dataset...
+Starting blind execution on 5th-year unseen parameters...
+Backtest starting: 365 candles, start_candle=0
+  Candle    0/365  Portfolio: $3,000.00
+DEBUG: coin=kapcoin-usd_train proba=0.6092 safe_L=False trend=True atr=13.55
+DEBUG: coin=metucoin-usd_train proba=0.4671 safe_L=False trend=False atr=173.22
+DEBUG: coin=tamcoin-usd_train proba=0.4702 safe_L=True trend=True atr=255.20
+DEBUG: coin=kapcoin-usd_train proba=0.6821 safe_L=False trend=True atr=14.13
+DEBUG: coin=metucoin-usd_train proba=0.4300 safe_L=False trend=True atr=168.98
+DEBUG: coin=tamcoin-usd_train proba=0.4971 safe_L=True trend=True atr=248.27
+DEBUG: coin=kapcoin-usd_train proba=0.6453 safe_L=False trend=True atr=14.03
+DEBUG: coin=metucoin-usd_train proba=0.4300 safe_L=False trend=False atr=149.45
+DEBUG: coin=tamcoin-usd_train proba=0.5827 safe_L=True trend=True atr=252.83
+DEBUG: coin=kapcoin-usd_train proba=0.5212 safe_L=False trend=True atr=14.62
+DEBUG: coin=metucoin-usd_train proba=0.4300 safe_L=False trend=False atr=148.02
+DEBUG: coin=tamcoin-usd_train proba=0.5488 safe_L=True trend=True atr=269.18
+DEBUG: coin=kapcoin-usd_train proba=0.5672 safe_L=False trend=True atr=14.14
+DEBUG: coin=metucoin-usd_train proba=0.5788 safe_L=False trend=False atr=145.51
+DEBUG: coin=tamcoin-usd_train proba=0.5174 safe_L=True trend=True atr=284.10
+DEBUG: coin=kapcoin-usd_train proba=0.4836 safe_L=False trend=True atr=13.60
+DEBUG: coin=metucoin-usd_train proba=0.5130 safe_L=False trend=False atr=146.22
+DEBUG: coin=tamcoin-usd_train proba=0.5118 safe_L=True trend=True atr=282.89
+DEBUG: coin=kapcoin-usd_train proba=0.1576 safe_L=False trend=True atr=12.90
+DEBUG: coin=metucoin-usd_train proba=0.5788 safe_L=False trend=False atr=153.86
+  Candle  100/365  Portfolio: $3,192.98
+  Candle  200/365  Portfolio: $3,385.05
+  Candle  300/365  Portfolio: $3,466.91
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    3,570.67
+  Net P&L             : $     +570.67
+  Return              :     +19.0222%
+-------------------------------------------------------
+  Total Candles       :           365
+  Total Trades        :           131
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================

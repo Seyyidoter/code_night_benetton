@@ -1,18 +1,13 @@
-"""
-Bu dosya finalde seçilen stratejiyi çalıştırmak için kullanılacak.
-
-Şimdilik varsayılan olarak Safe stratejiyi çalıştırıyoruz.
-Sonra compare_strategies.py sonucuna göre bunu Fast veya ML ile değiştirebiliriz.
-"""
-
 from cnlib import backtest
 
 from config import INITIAL_CAPITAL
-from strategy_safe import SafeHybridStrategy
-
+from strategy_ml import MLConfirmedStrategy
 
 def main():
-    strategy = SafeHybridStrategy()
+    strategy = MLConfirmedStrategy()
+    strategy.get_data()
+    strategy.egit()
+
     result = backtest.run(
         strategy=strategy,
         initial_capital=INITIAL_CAPITAL,
