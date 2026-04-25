@@ -1,0 +1,281 @@
+﻿
+============================================================
+BENCHMARKING MODEL: RANDOMFOREST (BASELINE)
+============================================================
+[ML TRAIN] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+[RANDOMFOREST (BASELINE) TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,165.32
+  Candle  200/393  Portfolio: $6,249.94
+  Candle  300/393  Portfolio: $14,387.12
+
+============================================================
+BENCHMARKING MODEL: HISTGRADIENTBOOSTING
+============================================================
+[ML TRAIN] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+[HISTGRADIENTBOOSTING TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,162.99
+  Candle  200/393  Portfolio: $6,269.08
+  Candle  300/393  Portfolio: $13,790.90
+
+============================================================
+BENCHMARKING MODEL: EXTRATREES
+============================================================
+[ML TRAIN] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+[EXTRATREES TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,191.26
+  Candle  200/393  Portfolio: $6,000.33
+  Candle  300/393  Portfolio: $13,687.86
+
+============================================================
+BENCHMARKING MODEL: LOGISTICREGRESSION
+============================================================
+[ML TRAIN] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+[LOGISTICREGRESSION TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,186.57
+  Candle  200/393  Portfolio: $6,272.32
+  Candle  300/393  Portfolio: $14,769.50
+
+============================================================
+OOS (UNSEEN) BENCHMARK COMPARISON
+============================================================
+               strategy  return_pct  trade_count  max_drawdown_pct  balanced_score
+     LogisticRegression    737.3443          210              4.17          733.17
+RandomForest (Baseline)    713.4703          224              4.17          709.30
+             ExtraTrees    693.1142          228              4.26          688.85
+   HistGradientBoosting    602.4748          241              3.05          599.42
+
+Pseudo unseen test coin sample: kapcoin-usd_train
+DEV range : 2022-11-27 00:00:00 -> 2026-02-15 00:00:00
+TEST range: 2026-02-16 00:00:00 -> 2027-03-15 00:00:00
+
+============================================================
+RUNNING PSEUDO-UNSEEN TEST: SAFE
+============================================================
+[SAFE TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $3,128.88
+  Candle  300/393  Portfolio: $3,570.46
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    3,714.14
+  Net P&L             : $     +714.14
+  Return              :     +23.8048%
+-------------------------------------------------------
+  Total Candles       :           393
+  Total Trades        :            60
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+Summary: {'strategy': 'safe', 'return_pct': 23.8048, 'trade_count': 53, 'max_drawdown_pct': np.float64(1.51), 'balanced_score': np.float64(22.29)}
+
+============================================================
+RUNNING PSEUDO-UNSEEN TEST: FAST
+============================================================
+[FAST TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $3,000.00
+  Candle  300/393  Portfolio: $3,000.00
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $    3,016.14
+  Net P&L             : $      +16.14
+  Return              :      +0.5381%
+-------------------------------------------------------
+  Total Candles       :           393
+  Total Trades        :             4
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+Summary: {'strategy': 'fast', 'return_pct': 0.5381, 'trade_count': 4, 'max_drawdown_pct': np.float64(0.07), 'balanced_score': np.float64(0.47)}
+
+============================================================
+RUNNING PSEUDO-UNSEEN TEST: ML
+============================================================
+[ML TRAIN] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+[ML TEST] loaded coins: ['kapcoin-usd_train', 'metucoin-usd_train', 'tamcoin-usd_train']
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,186.57
+  Candle  200/393  Portfolio: $6,272.32
+  Candle  300/393  Portfolio: $14,769.50
+=======================================================
+  BACKTEST RESULTS
+=======================================================
+  Initial Capital     : $    3,000.00
+  Final Portfolio     : $   25,120.33
+  Net P&L             : $  +22,120.33
+  Return              :    +737.3443%
+-------------------------------------------------------
+  Total Candles       :           393
+  Total Trades        :           629
+  Liquidations        :             0
+  Liquidation Loss    : $        0.00
+  Validation Errors   :             0
+  Strategy Errors     :             0
+  Failed Opens        :             0
+=======================================================
+Summary: {'strategy': 'ml', 'return_pct': 737.3443, 'trade_count': 210, 'max_drawdown_pct': np.float64(4.17), 'balanced_score': np.float64(733.17)}
+
+============================================================
+PSEUDO-UNSEEN COMPARISON
+============================================================
+strategy  return_pct  trade_count  max_drawdown_pct  balanced_score
+      ml    737.3443          210              4.17          733.17
+    safe     23.8048           53              1.51           22.29
+    fast      0.5381            4              0.07            0.47
+
+Best pseudo-unseen candidate: ml
+
+[BILGI] Strateji: MLConfirmedStrategy (Logistic Regression)
+[BILGI] Model E­itilen Veri: Tam 4 Y²l (1570 mum)
+[BILGI] Test Edilecek Kurgusal 5. Y²llar: 392 mum uzunlu­unda
+
+5. Y²l Sentetik Senaryo 1 olu■turuluyor ve ML backtest ko■uluyor...
+5. Y²l Sentetik Senaryo 2 olu■turuluyor ve ML backtest ko■uluyor...
+5. Y²l Sentetik Senaryo 3 olu■turuluyor ve ML backtest ko■uluyor...
+5. Y²l Sentetik Senaryo 4 olu■turuluyor ve ML backtest ko■uluyor...
+5. Y²l Sentetik Senaryo 5 olu■turuluyor ve ML backtest ko■uluyor...
+
+============================================================
+5. YIL KURGUSAL TEST SONUÃLARI (ML STRESS TEST)
+============================================================
+ scenario  return_pct  trade_count  max_drawdown_pct
+Senaryo 1  20359.5590          227             52.00
+Senaryo 2    125.1608          222             78.08
+Senaryo 3   9916.1021          227             46.11
+Senaryo 4    648.9939          207             70.04
+Senaryo 5   4565.7613          228             67.69
+
+[ÍZET]
+Ortalama Getiri   : +7123.12%
+En K÷t³ Senaryo   : +125.16%
+En ¦yi Senaryo    : +20359.56%
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,045.68
+  Candle  200/393  Portfolio: $3,117.30
+  Candle  300/393  Portfolio: $3,203.42
+Scenario 1 [SAFE]: {'strategy': 'safe', 'return_pct': 12.6495, 'trade_count': 29, 'max_drawdown_pct': np.float64(1.27), 'scenario': 1, 'seed': 42}
+Scenario 1 [ML]  : {'strategy': 'ml', 'return_pct': 2464.2987, 'trade_count': 228, 'max_drawdown_pct': np.float64(46.95), 'scenario': 1, 'seed': 42}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $3,051.49
+  Candle  300/393  Portfolio: $3,018.13
+Scenario 2 [SAFE]: {'strategy': 'safe', 'return_pct': 6.0242, 'trade_count': 20, 'max_drawdown_pct': np.float64(3.07), 'scenario': 2, 'seed': 43}
+Scenario 2 [ML]  : {'strategy': 'ml', 'return_pct': 1552.7247, 'trade_count': 230, 'max_drawdown_pct': np.float64(39.13), 'scenario': 2, 'seed': 43}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,006.49
+  Candle  200/393  Portfolio: $3,109.44
+  Candle  300/393  Portfolio: $3,369.49
+Scenario 3 [SAFE]: {'strategy': 'safe', 'return_pct': 12.3162, 'trade_count': 16, 'max_drawdown_pct': np.float64(0.65), 'scenario': 3, 'seed': 44}
+Scenario 3 [ML]  : {'strategy': 'ml', 'return_pct': -3.9906, 'trade_count': 215, 'max_drawdown_pct': np.float64(92.79), 'scenario': 3, 'seed': 44}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $1,844.43
+  Candle  300/393  Portfolio: $1,580.69
+Scenario 4 [SAFE]: {'strategy': 'safe', 'return_pct': -46.6547, 'trade_count': 13, 'max_drawdown_pct': np.float64(47.31), 'scenario': 4, 'seed': 45}
+Scenario 4 [ML]  : {'strategy': 'ml', 'return_pct': 5405.4391, 'trade_count': 232, 'max_drawdown_pct': np.float64(50.74), 'scenario': 4, 'seed': 45}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $1,789.61
+  Candle  300/393  Portfolio: $1,755.78
+Scenario 5 [SAFE]: {'strategy': 'safe', 'return_pct': -33.6374, 'trade_count': 30, 'max_drawdown_pct': np.float64(46.33), 'scenario': 5, 'seed': 46}
+Scenario 5 [ML]  : {'strategy': 'ml', 'return_pct': 549.8476, 'trade_count': 234, 'max_drawdown_pct': np.float64(70.77), 'scenario': 5, 'seed': 46}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $2,400.00
+  Candle  200/393  Portfolio: $2,361.95
+  Candle  300/393  Portfolio: $1,781.75
+Scenario 6 [SAFE]: {'strategy': 'safe', 'return_pct': -39.2802, 'trade_count': 25, 'max_drawdown_pct': np.float64(42.67), 'scenario': 6, 'seed': 47}
+Scenario 6 [ML]  : {'strategy': 'ml', 'return_pct': 1137.155, 'trade_count': 221, 'max_drawdown_pct': np.float64(63.28), 'scenario': 6, 'seed': 47}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $2,946.26
+  Candle  200/393  Portfolio: $3,198.50
+  Candle  300/393  Portfolio: $3,330.49
+Scenario 7 [SAFE]: {'strategy': 'safe', 'return_pct': 15.6489, 'trade_count': 24, 'max_drawdown_pct': np.float64(2.16), 'scenario': 7, 'seed': 48}
+Scenario 7 [ML]  : {'strategy': 'ml', 'return_pct': 2884.9343, 'trade_count': 226, 'max_drawdown_pct': np.float64(59.73), 'scenario': 7, 'seed': 48}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $3,073.90
+  Candle  300/393  Portfolio: $3,166.73
+Scenario 8 [SAFE]: {'strategy': 'safe', 'return_pct': 0.7874, 'trade_count': 22, 'max_drawdown_pct': np.float64(12.52), 'scenario': 8, 'seed': 49}
+Scenario 8 [ML]  : {'strategy': 'ml', 'return_pct': 2646.6754, 'trade_count': 231, 'max_drawdown_pct': np.float64(46.55), 'scenario': 8, 'seed': 49}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,000.00
+  Candle  200/393  Portfolio: $1,781.25
+  Candle  300/393  Portfolio: $1,850.56
+Scenario 9 [SAFE]: {'strategy': 'safe', 'return_pct': -36.683, 'trade_count': 20, 'max_drawdown_pct': np.float64(40.93), 'scenario': 9, 'seed': 50}
+Scenario 9 [ML]  : {'strategy': 'ml', 'return_pct': 6825.1357, 'trade_count': 224, 'max_drawdown_pct': np.float64(46.87), 'scenario': 9, 'seed': 50}
+Backtest starting: 393 candles, start_candle=0
+  Candle    0/393  Portfolio: $3,000.00
+  Candle  100/393  Portfolio: $3,051.38
+  Candle  200/393  Portfolio: $2,791.42
+  Candle  300/393  Portfolio: $2,791.42
+Scenario 10 [SAFE]: {'strategy': 'safe', 'return_pct': -7.6526, 'trade_count': 9, 'max_drawdown_pct': np.float64(10.84), 'scenario': 10, 'seed': 51}
+Scenario 10 [ML]  : {'strategy': 'ml', 'return_pct': 1479.8577, 'trade_count': 222, 'max_drawdown_pct': np.float64(53.3), 'scenario': 10, 'seed': 51}
+
+============================================================
+BOOTSTRAP STRESS SUMMARY (SAFE vs ML)
+============================================================
+strategy  return_pct  trade_count  max_drawdown_pct  scenario  seed
+    safe     12.6495           29              1.27         1    42
+      ml   2464.2987          228             46.95         1    42
+    safe      6.0242           20              3.07         2    43
+      ml   1552.7247          230             39.13         2    43
+    safe     12.3162           16              0.65         3    44
+      ml     -3.9906          215             92.79         3    44
+    safe    -46.6547           13             47.31         4    45
+      ml   5405.4391          232             50.74         4    45
+    safe    -33.6374           30             46.33         5    46
+      ml    549.8476          234             70.77         5    46
+    safe    -39.2802           25             42.67         6    47
+      ml   1137.1550          221             63.28         6    47
+    safe     15.6489           24              2.16         7    48
+      ml   2884.9343          226             59.73         7    48
+    safe      0.7874           22             12.52         8    49
+      ml   2646.6754          231             46.55         8    49
+    safe    -36.6830           20             40.93         9    50
+      ml   6825.1357          224             46.87         9    50
+    safe     -7.6526            9             10.84        10    51
+      ml   1479.8577          222             53.30        10    51
+
+[SAFE ÍZET]
+Average return: -11.65
+Worst return  : -46.65
+Best return   : 15.65
+Worst Drawdown: 47.31
+
+[ML ÍZET]
+Average return: 2494.21
+Worst return  : -3.99
+Best return   : 6825.14
+Worst Drawdown: 92.79

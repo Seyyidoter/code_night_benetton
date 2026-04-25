@@ -10,6 +10,7 @@ Kullandıklarımız:
 """
 
 import pandas as pd
+import numpy as np
 
 from config import (
     SHORT_MA,
@@ -26,23 +27,11 @@ from config import (
 
 def calculate_obv(df: pd.DataFrame) -> pd.Series:
     """
-    On-Balance Volume hesaplar.
+    On-Balance Volume hesaplar (vektörel — hızlı).
     """
-    obv_values = [0]
-
-    for i in range(1, len(df)):
-        current_close = df["Close"].iloc[i]
-        previous_close = df["Close"].iloc[i - 1]
-        current_volume = df["Volume"].iloc[i]
-
-        if current_close > previous_close:
-            obv_values.append(obv_values[-1] + current_volume)
-        elif current_close < previous_close:
-            obv_values.append(obv_values[-1] - current_volume)
-        else:
-            obv_values.append(obv_values[-1])
-
-    return pd.Series(obv_values, index=df.index)
+    direction = np.sign(df["Close"].diff())
+    direction.iloc[0] = 0
+    return (direction * df["Volume"]).cumsum()
 
 
 def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
@@ -73,7 +62,23 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["BB_MID"] = rolling_mean
     df["BB_UPPER"] = rolling_mean + BB_STD * rolling_std
     df["BB_LOWER"] = rolling_mean - BB_STD * rolling_std
-    df["BB_WIDTH"] = (df["BB_UPPER"] - df["BB_LOWER"]) / df["BB_MID"]
+    bb_diff = df["BB_UPPER"] - df["BB_LOWER"]
+    df["BB_WIDTH"] = bb_diff / df["BB_MID"].replace(0, 1e-10) # Prevent zero division
+
+    # RSI (14 period)
+    delta = df["Close"].diff()
+    gain = (delta.where(delta > 0, 0)).rolling(window=14).mean()
+    loss = (-delta.where(delta < 0, 0)).rolling(window=14).mean()
+    rs = gain / loss.replace(0, 1e-10) # Prevent zero division
+    df["RSI_14"] = 100 - (100 / (1 + rs))
+
+    # ATR (14 period)
+    high_low = df["High"] - df["Low"]
+    high_close = np.abs(df["High"] - df["Close"].shift())
+    low_close = np.abs(df["Low"] - df["Close"].shift())
+    ranges = pd.concat([high_low, high_close, low_close], axis=1)
+    true_range = np.max(ranges, axis=1)
+    df["ATR_14"] = true_range.rolling(14).mean()
 
     # Hacim teyidi
     df["VOLUME_AVG"] = df["Volume"].rolling(VOLUME_AVG_WINDOW).mean()
@@ -89,6 +94,6 @@ def add_indicators(df: pd.DataFrame) -> pd.DataFrame:
     df["MA_DIFF_SAFE"] = df[f"SMA_{SHORT_MA}"] - df[f"SMA_{LONG_MA}"]
     df["MA_DIFF_FAST"] = df[f"EMA_{FAST_EMA_SHORT}"] - df[f"EMA_{FAST_EMA_LONG}"]
     df["OBV_DIFF"] = df["OBV"].diff()
-    df["BB_POSITION"] = (df["Close"] - df["BB_LOWER"]) / (df["BB_UPPER"] - df["BB_LOWER"])
+    df["BB_POSITION"] = (df["Close"] - df["BB_LOWER"]) / bb_diff.replace(0, 1e-10)
 
     return df

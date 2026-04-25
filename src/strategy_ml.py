@@ -7,12 +7,14 @@ Yöntem:
 - Model predict içinde eğitilmez
 - Önce get_data(), sonra model eğitimi, sonra backtest.run()
 
-Bu cnlib kılavuzundaki öneriyle uyumludur.
+Bu sürümde:
+- gereksiz ikinci add_indicators çağrısı kaldırıldı
+- sklearn warning'i çıkmaması için tahmin sırasında DataFrame veriliyor
 """
 
-import numpy as np
+import logging
 import pandas as pd
-from sklearn.ensemble import RandomForestClassifier
+from sklearn.linear_model import LogisticRegression
 from cnlib.base_strategy import BaseStrategy
 
 from config import (
@@ -24,45 +26,48 @@ from config import (
     MIN_HISTORY,
 )
 from indicators import add_indicators
-from utils import has_nan, build_tp_sl
+from utils import has_nan, build_tp_sl, _flat_decision
 
 
 class MLConfirmedStrategy(BaseStrategy):
     def __init__(self):
         super().__init__()
         self.models = {}
+        self.feature_columns = [
+            "ret_1",
+            "ma_diff_safe",
+            "ma_diff_fast",
+            "obv_diff",
+            "bb_position",
+            "volatility",
+            "volume_confirmed",
+            "volume_spike",
+        ]
 
-    def _flat_decision(self, coin: str) -> dict:
-        return {
-            "coin": coin,
-            "signal": 0,
-            "allocation": 0.0,
-            "leverage": 1,
-        }
+    # _flat_decision is now imported from utils
+    pass
 
-    def _feature_frame(self, df: pd.DataFrame) -> pd.DataFrame:
+    def _feature_frame(self, enriched_df: pd.DataFrame) -> pd.DataFrame:
         """
-        ML için kullanılacak özellikleri çıkarır.
+        Buraya gelen df zaten add_indicators geçmiş veri olmalı.
+        Tekrar add_indicators çağırmıyoruz.
         """
-        df = add_indicators(df).copy()
-
-        features = pd.DataFrame(index=df.index)
-        features["ret_1"] = df["RETURNS"]
-        features["ma_diff_safe"] = df["MA_DIFF_SAFE"]
-        features["ma_diff_fast"] = df["MA_DIFF_FAST"]
-        features["obv_diff"] = df["OBV_DIFF"]
-        features["bb_position"] = df["BB_POSITION"]
-        features["volatility"] = df["VOLATILITY"]
-        features["volume_confirmed"] = df["VOLUME_CONFIRMED"].astype(float)
-        features["volume_spike"] = df["VOLUME_SPIKE"].astype(float)
-
+        features = pd.DataFrame(index=enriched_df.index)
+        features["ret_1"] = enriched_df["RETURNS"]
+        features["ma_diff_safe"] = enriched_df["MA_DIFF_SAFE"]
+        features["ma_diff_fast"] = enriched_df["MA_DIFF_FAST"]
+        features["obv_diff"] = enriched_df["OBV_DIFF"]
+        features["bb_position"] = enriched_df["BB_POSITION"]
+        features["volatility"] = enriched_df["VOLATILITY"]
+        features["volume_confirmed"] = enriched_df["VOLUME_CONFIRMED"].astype(float)
+        features["volume_spike"] = enriched_df["VOLUME_SPIKE"].astype(float)
         return features
 
-    def _build_labels(self, df: pd.DataFrame) -> pd.Series:
+    def _build_labels(self, enriched_df: pd.DataFrame) -> pd.Series:
         """
         Bir sonraki kapanış mevcut kapanıştan yüksekse 1, değilse 0.
         """
-        return (df["Close"].shift(-1) > df["Close"]).astype(int)
+        return (enriched_df["Close"].shift(-1) > enriched_df["Close"]).astype(int)
 
     def prepare_models(self):
         """
@@ -71,29 +76,28 @@ class MLConfirmedStrategy(BaseStrategy):
         """
         self.models = {}
 
-        for coin, df in self.coin_data.items():
+        for coin, df in self._full_data.items():
             enriched = add_indicators(df)
+
             X = self._feature_frame(enriched)
             y = self._build_labels(enriched)
 
             dataset = X.copy()
             dataset["target"] = y
-
             dataset = dataset.dropna().reset_index(drop=True)
 
             if len(dataset) < MIN_HISTORY:
                 continue
 
-            X_clean = dataset.drop(columns=["target"])
+            X_clean = dataset[self.feature_columns]
             y_clean = dataset["target"]
 
-            model = RandomForestClassifier(
-                n_estimators=100,
-                max_depth=5,
-                random_state=42,
+            model = LogisticRegression(
+                class_weight="balanced", 
+                random_state=42, 
+                max_iter=1000
             )
             model.fit(X_clean.iloc[:-1], y_clean.iloc[:-1])
-
             self.models[coin] = model
 
     def _build_long_decision(self, coin: str, entry: float) -> dict:
@@ -133,30 +137,42 @@ class MLConfirmedStrategy(BaseStrategy):
 
         for coin, df in data.items():
             if coin not in self.models or len(df) < MIN_HISTORY:
-                decisions.append(self._flat_decision(coin))
+                decisions.append(_flat_decision(coin))
                 continue
 
-            enriched = add_indicators(df)
-            X = self._feature_frame(enriched).dropna()
+            try:
+                enriched = add_indicators(df)
+                X = self._feature_frame(enriched).dropna()
 
-            if len(X) == 0:
-                decisions.append(self._flat_decision(coin))
-                continue
+                if len(X) == 0:
+                    decisions.append(_flat_decision(coin))
+                    continue
 
-            last_features = X.iloc[-1]
+                last_features = X.iloc[[-1]][self.feature_columns]
 
-            if has_nan(last_features.values):
-                decisions.append(self._flat_decision(coin))
-                continue
+                if has_nan(last_features.iloc[0].values):
+                    decisions.append(_flat_decision(coin))
+                    continue
 
-            proba_up = self.models[coin].predict_proba([last_features.values])[0][1]
-            entry = float(enriched["Close"].iloc[-1])
+                model = self.models[coin]
+                proba = model.predict_proba(last_features)[0]
 
-            if proba_up >= ML_PROBA_THRESHOLD:
-                decisions.append(self._build_long_decision(coin, entry))
-            elif proba_up <= (1 - ML_PROBA_THRESHOLD):
-                decisions.append(self._build_short_decision(coin, entry))
-            else:
-                decisions.append(self._flat_decision(coin))
+                # Tek sınıflı model koruması
+                if len(proba) < 2:
+                    proba_up = 1.0 if model.classes_[0] == 1 else 0.0
+                else:
+                    proba_up = proba[1]
+
+                entry = float(enriched["Close"].iloc[-1])
+
+                if proba_up >= ML_PROBA_THRESHOLD:
+                    decisions.append(self._build_long_decision(coin, entry))
+                elif proba_up <= (1 - ML_PROBA_THRESHOLD):
+                    decisions.append(self._build_short_decision(coin, entry))
+                else:
+                    decisions.append(_flat_decision(coin))
+            except Exception as e:
+                logging.warning(f"Predict error for {coin}: {e}")
+                decisions.append(_flat_decision(coin))
 
         return decisions

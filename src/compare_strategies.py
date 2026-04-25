@@ -1,15 +1,6 @@
 """
-Bu dosya üç stratejiyi art arda çalıştırır ve temel sonuçlarını karşılaştırır.
-
-Karşılaştırılan stratejiler:
-- SafeHybridStrategy
-- FastMomentumStrategy
-- MLConfirmedStrategy
-
-Amaç:
-- aynı başlangıç sermayesiyle çalıştırmak
-- return, trade sayısı ve max drawdown gibi metriklere bakmak
-- en stabil / en mantıklı stratejiyi seçmek
+Bu dosya SAFE, FAST ve ML stratejilerini art arda çalıştırır
+ve temel sonuçlarını karşılaştırır.
 """
 
 import pandas as pd
@@ -21,29 +12,11 @@ from strategy_fast import FastMomentumStrategy
 from strategy_ml import MLConfirmedStrategy
 
 
-def compute_max_drawdown(portfolio_series) -> float:
-    """
-    Portföy serisinden maksimum drawdown yüzdesini hesaplar.
-    """
-    series = pd.Series(portfolio_series, dtype="float64")
-    if len(series) == 0:
-        return 0.0
-
-    running_max = series.cummax()
-    drawdown = (series - running_max) / running_max * 100.0
-    return abs(drawdown.min())
+from utils import compute_max_drawdown
 
 
-def run_single_strategy(name: str, strategy):
-    """
-    Tek stratejiyi çalıştırır ve özet metrikleri döndürür.
-    """
-    # ML stratejisinde modeli önceden eğitmek gerekiyor
-    if isinstance(strategy, MLConfirmedStrategy):
-        strategy.get_data()
-        strategy.prepare_models()
-
-    result = backtest.run(strategy=strategy, initial_capital=INITIAL_CAPITAL)
+def run_single_strategy(name: str, strategy, silent=True):
+    result = backtest.run(strategy=strategy, initial_capital=INITIAL_CAPITAL, silent=silent)
 
     trade_count = len(result.trade_history)
     max_dd = compute_max_drawdown(result.portfolio_series)
@@ -52,33 +25,50 @@ def run_single_strategy(name: str, strategy):
         "strategy": name,
         "return_pct": float(result.return_pct),
         "trade_count": trade_count,
+        "liquidations": result.total_liquidations,
         "max_drawdown_pct": round(max_dd, 2),
-        # Basit dengeli skor: getiri - drawdown
         "balanced_score": round(float(result.return_pct) - max_dd, 2),
+        "final_value": round(result.final_portfolio_value, 2),
     }
 
     return result, summary
 
 
 def main():
-    strategies = [
-        ("safe", SafeHybridStrategy()),
-        ("fast", FastMomentumStrategy()),
-        ("ml", MLConfirmedStrategy()),
-    ]
-
     results = []
 
-    for name, strategy in strategies:
-        print(f"\n{'=' * 60}")
-        print(f"RUNNING STRATEGY: {name.upper()}")
-        print(f"{'=' * 60}")
+    # 1. Safe
+    print(f"\n{'=' * 60}")
+    print("RUNNING STRATEGY: SAFE")
+    print(f"{'=' * 60}")
+    s1 = SafeHybridStrategy()
+    r1, sum1 = run_single_strategy("safe", s1)
+    r1.print_summary()
+    results.append(sum1)
 
-        result, summary = run_single_strategy(name, strategy)
-        result.print_summary()
-        results.append(summary)
+    # 2. Fast
+    print(f"\n{'=' * 60}")
+    print("RUNNING STRATEGY: FAST")
+    print(f"{'=' * 60}")
+    s2 = FastMomentumStrategy()
+    r2, sum2 = run_single_strategy("fast", s2)
+    r2.print_summary()
+    results.append(sum2)
 
-    df = pd.DataFrame(results).sort_values(by="balanced_score", ascending=False)
+    # 3. ML
+    print(f"\n{'=' * 60}")
+    print("RUNNING STRATEGY: ML")
+    print(f"{'=' * 60}")
+    s3 = MLConfirmedStrategy()
+    s3.get_data()
+    s3.prepare_models()
+    print(f"ML models trained for: {list(s3.models.keys())}")
+    r3, sum3 = run_single_strategy("ml", s3)
+    r3.print_summary()
+    results.append(sum3)
+
+    # Comparison
+    df = pd.DataFrame(results).sort_values(by="return_pct", ascending=False)
 
     print("\n" + "=" * 60)
     print("COMPARISON TABLE")
@@ -86,7 +76,7 @@ def main():
     print(df.to_string(index=False))
 
     best = df.iloc[0]
-    print("\nBest balanced candidate:", best["strategy"])
+    print(f"\nBest candidate: {best['strategy']} with {best['return_pct']:.2f}% return")
 
 
 if __name__ == "__main__":
