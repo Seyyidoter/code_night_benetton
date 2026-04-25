@@ -130,6 +130,7 @@ from cnlib import backtest
 from package_data_loader import load_packaged_training_data
 from config import INITIAL_CAPITAL, BOOTSTRAP_SCENARIOS, BOOTSTRAP_SEED
 from strategy_safe import SafeHybridStrategy
+from strategy_ml import MLConfirmedStrategy
 from data_splits import split_coin_data_by_ratio, attach_fixed_data_loader, block_bootstrap_coin_data
 
 
@@ -142,6 +143,22 @@ def run_safe_on_fixed_data(backtest_data: dict):
     result = backtest.run(strategy=strategy, initial_capital=INITIAL_CAPITAL)
 
     return {
+        "strategy": "safe",
+        "return_pct": float(result.return_pct),
+        "trade_count": len(result.trade_history),
+        "max_drawdown_pct": round(compute_max_drawdown(result.portfolio_series), 2),
+    }
+
+def run_ml_on_fixed_data(backtest_data: dict, train_data: dict):
+    strategy = MLConfirmedStrategy()
+    strategy._full_data = train_data
+    strategy.prepare_models()
+    
+    attach_fixed_data_loader(strategy, backtest_data)
+    result = backtest.run(strategy=strategy, initial_capital=INITIAL_CAPITAL, silent=True)
+
+    return {
+        "strategy": "ml",
         "return_pct": float(result.return_pct),
         "trade_count": len(result.trade_history),
         "max_drawdown_pct": round(compute_max_drawdown(result.portfolio_series), 2),
@@ -165,23 +182,39 @@ def main():
             seed=seed,
         )
 
-        summary = run_safe_on_fixed_data(synthetic_future)
-        summary["scenario"] = i + 1
-        summary["seed"] = seed
-        rows.append(summary)
+        safe_summary = run_safe_on_fixed_data(synthetic_future)
+        safe_summary["scenario"] = i + 1
+        safe_summary["seed"] = seed
+        rows.append(safe_summary)
+        
+        ml_summary = run_ml_on_fixed_data(synthetic_future, dev_data)
+        ml_summary["scenario"] = i + 1
+        ml_summary["seed"] = seed
+        rows.append(ml_summary)
 
-        print(f"Scenario {i+1}: {summary}")
+        print(f"Scenario {i+1} [SAFE]: {safe_summary}")
+        print(f"Scenario {i+1} [ML]  : {ml_summary}")
 
     df = pd.DataFrame(rows)
 
     print("\n" + "=" * 60)
-    print("BOOTSTRAP STRESS SUMMARY")
+    print("BOOTSTRAP STRESS SUMMARY (SAFE vs ML)")
     print("=" * 60)
     print(df.to_string(index=False))
 
-    print("\nAverage return:", round(df["return_pct"].mean(), 2))
-    print("Worst return  :", round(df["return_pct"].min(), 2))
-    print("Best return   :", round(df["return_pct"].max(), 2))
+    print("\n[SAFE ÖZET]")
+    safe_df = df[df["strategy"] == "safe"]
+    print("Average return:", round(safe_df["return_pct"].mean(), 2))
+    print("Worst return  :", round(safe_df["return_pct"].min(), 2))
+    print("Best return   :", round(safe_df["return_pct"].max(), 2))
+    print("Worst Drawdown:", round(safe_df["max_drawdown_pct"].max(), 2))
+
+    print("\n[ML ÖZET]")
+    ml_df = df[df["strategy"] == "ml"]
+    print("Average return:", round(ml_df["return_pct"].mean(), 2))
+    print("Worst return  :", round(ml_df["return_pct"].min(), 2))
+    print("Best return   :", round(ml_df["return_pct"].max(), 2))
+    print("Worst Drawdown:", round(ml_df["max_drawdown_pct"].max(), 2))
 
 
 if __name__ == "__main__":
@@ -311,12 +344,12 @@ VOLATILITY_WINDOW = 20
 VOLATILITY_GUARD_MULTIPLIER = 1.8
 
 # İşlem ayarları
-DEFAULT_ALLOCATION = 0.20
-STRONG_SIGNAL_ALLOCATION = 0.30
-FAST_ALLOCATION = 0.20
-ML_ALLOCATION = 0.20
+DEFAULT_ALLOCATION = 0.15
+STRONG_SIGNAL_ALLOCATION = 0.20
+FAST_ALLOCATION = 0.15
+ML_ALLOCATION = 0.15
 
-DEFAULT_LEVERAGE = 3 # Reduced from 5 to 3 for safety considering compound returns
+DEFAULT_LEVERAGE = 2 # Reduced from 3 to 2 for safety considering compound returns and ML max drawdown
 
 # Risk / reward ayarları
 ATR_SL_MULTIPLIER = 1.5
@@ -508,6 +541,72 @@ def block_bootstrap_coin_data(
         synthetic[coin] = out.reset_index(drop=True)
 
     return synthetic
+==================================================
+FILE: fetch_binance.py
+==================================================
+
+import urllib.request
+import json
+import pandas as pd
+from pathlib import Path
+import os
+
+# Yarışma motoru bu 3 özel ismi arıyor, biz gerçek coinleri bu isimlerin içine "saklayacağız"
+# Böylece cnlib motoru hiç kod değiştirmeden bu coinleri trade edecek.
+MAPPING = {
+    "BTCUSDT": "kapcoin-usd_train",
+    "ETHUSDT": "metucoin-usd_train",
+    "BNBUSDT": "tamcoin-usd_train"
+}
+
+def fetch_binance_klines(symbol, interval="1d", limit=1000):
+    """Binance üzerinden kripto para grafiği çeker (örn: son 1000 günlük)"""
+    url = f"https://api.binance.com/api/v3/klines?symbol={symbol}&interval={interval}&limit={limit}"
+    
+    print(f"[{symbol}] Binance'den indiriliyor...")
+    req = urllib.request.Request(url, headers={'User-Agent': 'Mozilla/5.0'})
+    
+    with urllib.request.urlopen(req) as response:
+        data = json.loads(response.read().decode())
+        
+    df = pd.DataFrame(data, columns=[
+        "Open time", "Open", "High", "Low", "Close", "Volume", 
+        "Close time", "Quote asset volume", "Number of trades", 
+        "Taker buy base asset volume", "Taker buy quote asset volume", "Ignore"
+    ])
+    
+    # cnlib formatına dönüştürme
+    df["Date"] = pd.to_datetime(df["Open time"], unit='ms')
+    for col in ["Open", "High", "Low", "Close", "Volume"]:
+        df[col] = df[col].astype(float)
+        
+    df = df[["Date", "Open", "High", "Low", "Close", "Volume"]]
+    
+    # Eksik verileri ve None durumunu sil
+    df = df.dropna()
+    return df
+
+def main():
+    target_dir = Path("real_crypto_data")
+    target_dir.mkdir(exist_ok=True)
+    
+    for symbol, fake_name in MAPPING.items():
+        # Minimum 1500 mum (4 yıl) alabilmek için 2 ayrı limit çekeceğiz ama 
+        # API limit=1000 veriyor tek seferde. Basitlik için son 1000 günü çekelim (~3 yıl)
+        # 1000 gün = 2.7 Yıl (ML için yeterli eğitim)
+        df = fetch_binance_klines(symbol, limit=1000)
+        
+        # Dosyayı yarışmanın beklediği isimle parquet olarak kaydet
+        out_path = target_dir / f"{fake_name}.parquet"
+        df.to_parquet(out_path, index=False)
+        print(f"KAYDEDILDI: {symbol} -> {out_path} ({len(df)} mum)")
+        
+    print("\nTüm gerçek kripto verileri 'real_crypto_data' klasörüne başarıyla kaydedildi!")
+    print("Şimdi kodlarını bu klasörü hedef alarak çalıştırabilirsin.")
+
+if __name__ == "__main__":
+    main()
+
 ==================================================
 FILE: indicators.py
 ==================================================
@@ -737,10 +836,8 @@ FILE: main.py
 """
 Bu dosya yarışma için nihai stratejiyi çalıştırır.
 
-MLConfirmedStrategy (Optimize versiyon) kullanılıyor:
-- Tüm sıfıra bölme, NaN ve feature set kirlilikleri giderildi
-- Unseen yarışma verisi standartlarına uyarlandı (out-of-sample başarı)
-- OOS testte %5800+ artış sağlayan en güçlü algoritma
+Ana yarışma konfigürasyonu varsayılan olarak MLConfirmedStrategy (Logistic Regression) + Leverage 2 olarak belirlenmiştir.
+Yedek strateji (SAFE) gerektiğinde strateji import'u değiştirilerek kullanılabilir.
 """
 
 from cnlib import backtest
@@ -1115,8 +1212,8 @@ class FastMomentumStrategy(BaseStrategy):
         return trend_down and obv_down and volume_spike and not_overextended and volatility_ok and rsi_ok
 
     def _build_long_decision(self, coin: str, entry: float, atr: float) -> dict:
-        stop_loss = entry - (atr * config.ATR_SL_MULTIPLIER)
-        take_profit = entry + (atr * config.ATR_TP_MULTIPLIER)
+        stop_loss = max(1e-8, entry - (atr * config.ATR_SL_MULTIPLIER))
+        take_profit = max(1e-8, entry + (atr * config.ATR_TP_MULTIPLIER))
         
         return {
             "coin": coin,
@@ -1128,8 +1225,8 @@ class FastMomentumStrategy(BaseStrategy):
         }
 
     def _build_short_decision(self, coin: str, entry: float, atr: float) -> dict:
-        stop_loss = entry + (atr * config.ATR_SL_MULTIPLIER)
-        take_profit = entry - (atr * config.ATR_TP_MULTIPLIER)
+        stop_loss = max(1e-8, entry + (atr * config.ATR_SL_MULTIPLIER))
+        take_profit = max(1e-8, entry - (atr * config.ATR_TP_MULTIPLIER))
         
         return {
             "coin": coin,
@@ -1541,8 +1638,8 @@ class SafeHybridStrategy(BaseStrategy):
 
     def _build_long_decision(self, coin: str, entry: float, atr: float, ma_gap_ratio: float) -> dict:
         # Dynamic TP/SL using ATR
-        stop_loss = entry - (atr * config.ATR_SL_MULTIPLIER)
-        take_profit = entry + (atr * config.ATR_TP_MULTIPLIER)
+        stop_loss = max(1e-8, entry - (atr * config.ATR_SL_MULTIPLIER))
+        take_profit = max(1e-8, entry + (atr * config.ATR_TP_MULTIPLIER))
         
         # Dynamic allocation based on trend strength
         allocation = config.STRONG_SIGNAL_ALLOCATION if ma_gap_ratio >= SAFE_STRONG_TREND_GAP_RATIO else DEFAULT_ALLOCATION
@@ -1558,8 +1655,8 @@ class SafeHybridStrategy(BaseStrategy):
 
     def _build_short_decision(self, coin: str, entry: float, atr: float, ma_gap_ratio: float) -> dict:
         # Dynamic TP/SL using ATR
-        stop_loss = entry + (atr * config.ATR_SL_MULTIPLIER)
-        take_profit = entry - (atr * config.ATR_TP_MULTIPLIER)
+        stop_loss = max(1e-8, entry + (atr * config.ATR_SL_MULTIPLIER))
+        take_profit = max(1e-8, entry - (atr * config.ATR_TP_MULTIPLIER))
 
         # Dynamic allocation based on trend strength
         allocation = config.STRONG_SIGNAL_ALLOCATION if ma_gap_ratio >= SAFE_STRONG_TREND_GAP_RATIO else DEFAULT_ALLOCATION
@@ -1692,6 +1789,58 @@ if __name__ == "__main__":
     main()
 
 ==================================================
+FILE: test_real_crypto.py
+==================================================
+
+import pandas as pd
+from pathlib import Path
+from cnlib import backtest
+from strategy_ml import MLConfirmedStrategy
+from strategy_safe import SafeHybridStrategy
+
+def load_real_crypto_data(data_dir: Path) -> dict:
+    coins = ["kapcoin-usd_train", "metucoin-usd_train", "tamcoin-usd_train"]
+    data = {}
+    for c in coins:
+        f = data_dir / f"{c}.parquet"
+        if f.exists():
+            data[c] = pd.read_parquet(f)
+    return data
+
+def main():
+    data_dir = Path("real_crypto_data")
+    if not data_dir.exists():
+        print("Lütfen önce python fetch_binance.py komutunu çalıştırın!")
+        return
+
+    full_data = load_real_crypto_data(data_dir)
+    print(f"Gerçek kripto verisi yüklendi (Son ~1000 Gün).")
+    
+    # Veriyi Temsili Olarak Böl: %75 Training, %25 Test
+    from data_splits import split_coin_data_by_ratio, attach_fixed_data_loader
+    dev_data, test_data = split_coin_data_by_ratio(full_data)
+    
+    print("\n" + "="*50)
+    print("GERÇEK BİTCOİN/ETH/BNB VERİSİ - SAFE STRATEJİ")
+    print("="*50)
+    safe = SafeHybridStrategy()
+    attach_fixed_data_loader(safe, test_data)
+    backtest.run(strategy=safe, initial_capital=3000.0).print_summary()
+    
+    print("\n" + "="*50)
+    print("GERÇEK BİTCOİN/ETH/BNB VERİSİ - ML (LOGISTIC REGRESSION)")
+    print("="*50)
+    ml = MLConfirmedStrategy()
+    ml._full_data = dev_data
+    ml.prepare_models()
+    
+    attach_fixed_data_loader(ml, test_data)
+    backtest.run(strategy=ml, initial_capital=3000.0).print_summary()
+
+if __name__ == "__main__":
+    main()
+
+==================================================
 FILE: utils.py
 ==================================================
 
@@ -1772,13 +1921,13 @@ def build_tp_sl(entry: float, direction: int, stop_loss_pct: float, take_profit_
     -1 -> short
     """
     if direction == 1:
-        stop_loss = entry * (1 - stop_loss_pct)
-        take_profit = entry * (1 + take_profit_pct)
+        stop_loss = max(1e-8, entry * (1 - stop_loss_pct))
+        take_profit = max(1e-8, entry * (1 + take_profit_pct))
         return take_profit, stop_loss
 
     if direction == -1:
-        stop_loss = entry * (1 + stop_loss_pct)
-        take_profit = entry * (1 - take_profit_pct)
+        stop_loss = max(1e-8, entry * (1 + stop_loss_pct))
+        take_profit = max(1e-8, entry * (1 - take_profit_pct))
         return take_profit, stop_loss
 
     raise ValueError("direction sadece 1 veya -1 olabilir.")
